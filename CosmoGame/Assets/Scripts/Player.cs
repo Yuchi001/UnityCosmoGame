@@ -4,10 +4,17 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public int maxHP; // maksymalne hp jakie moze miec gracz
+    private int hp; // hp które ma gracz aktualnie
+
+    private bool isPlayerAlive = true;
+
     public float movementSpeed;
     public float attackSpeed; // attackSpeed = 3 to znaczy ze na 1 sekunde wykonamy 3 ataki
 
     private float _attackSpeedTimer;
+
+    public GameObject explosion;
 
     public GameObject bullet;
     public Transform shootPosition;
@@ -20,15 +27,25 @@ public class Player : MonoBehaviour
     void Start()
     {
         _attackSpeedTimer = 0;
+        hp = maxHP;
     }
     void Update()
     {
-        spriteRenderer.sprite = mainSprite;
-        if (_attackSpeedTimer < 1 / attackSpeed) // 1 / attackSpeed = 1 / 2 = 0.5 
+        if(isPlayerAlive) // isPlayerAlive == true
         {
-            _attackSpeedTimer += Time.deltaTime;
+            Shooting();
+            Movement();
         }
-        if(Input.GetKey(KeyCode.W)) //kiedy gracz wcisnie W, wykonaj te polecenia
+
+        if(hp <= 0 && isPlayerAlive)
+        {
+            OnDeath();
+        }
+    }
+    public void Movement()
+    {
+        spriteRenderer.sprite = mainSprite;
+        if (Input.GetKey(KeyCode.W)) //kiedy gracz wcisnie W, wykonaj te polecenia
         {
             Vector2 newPosition; // nowa pozycja
             // transform.position.x to aktualna pozycja x gracza
@@ -63,11 +80,37 @@ public class Player : MonoBehaviour
 
             spriteRenderer.sprite = rightSprite;
         }
-        if(Input.GetKey(KeyCode.Space) && _attackSpeedTimer >= 1 / attackSpeed) // 1 / attackSpeed = 1 / 2 = 0.5
+    }
+    public void Shooting()
+    {
+        if (_attackSpeedTimer < 1 / attackSpeed) // 1 / attackSpeed = 1 / 2 = 0.5 
+        {
+            _attackSpeedTimer += Time.deltaTime;
+        }
+
+        if (Input.GetKey(KeyCode.Space) && _attackSpeedTimer >= 1 / attackSpeed) // 1 / attackSpeed = 1 / 2 = 0.5
         {
             _attackSpeedTimer = 0;
             GameObject bulletClone = bullet;
             Instantiate(bulletClone, shootPosition.position, Quaternion.identity); // funkcja pojawiajaca rzeczy
+        }
+    }
+    public void OnDeath() // void = pustka 
+    {
+        SpawnParticles(explosion, 1f);
+        isPlayerAlive = false;
+        spriteRenderer.enabled = false;
+    }
+    public void SpawnParticles(GameObject particles, float time)
+    {
+        Instantiate(particles, transform.position, Quaternion.identity);
+        Destroy(particles, time);
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.tag == "EnemyBullet")
+        {
+            hp--; // hp = hp - 1// hp-=1
         }
     }
 }
