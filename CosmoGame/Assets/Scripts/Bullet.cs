@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float bulletSpeed = 3;
+    [HideInInspector] public int bulletDamage;
 
+    public GameObject explosionParticles;
+
+    private const float bulletSpeed = 3;
     private const float maxY = 6.5f;
-    void Start()
-    {
-        
-    }
+
     void Update()
     {
         Vector2 newPosition;
@@ -18,9 +18,23 @@ public class Bullet : MonoBehaviour
         newPosition.y = transform.position.y + bulletSpeed * Time.deltaTime;
         transform.position = newPosition;
 
-        if(transform.position.y > maxY)
+        if (transform.position.y > maxY)
         {
-            Destroy(gameObject); // gameObject odnosi sie do obiektu na ktorym znajduje sie dany skrypt
+            OnHit(0, false);
         }
+    }
+
+    public void OnHit(float time, bool showParticles = true)
+    {
+        if(showParticles)
+            SpawnParticles(explosionParticles, 3f);
+
+        Destroy(gameObject, time); // gameObject odnosi sie do obiektu na ktorym znajduje sie dany skrypt
+    }
+    public void SpawnParticles(GameObject particles, float time)
+    {
+        GameObject cloneObject = particles;
+        cloneObject = Instantiate(particles, transform.position, Quaternion.identity);
+        Destroy(cloneObject, time);
     }
 }

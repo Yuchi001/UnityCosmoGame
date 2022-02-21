@@ -5,6 +5,9 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     public int maxHP; // maksymalne hp jakie moze miec gracz
+    public int damageMax;
+
+
     private int hp; // hp które ma gracz aktualnie
 
     private bool isPlayerAlive = true;
@@ -15,6 +18,7 @@ public class Player : MonoBehaviour
     private float _attackSpeedTimer;
 
     public GameObject explosion;
+    public GameObject takeDamageExplosion;
 
     public GameObject bullet;
     public Transform shootPosition;
@@ -93,6 +97,9 @@ public class Player : MonoBehaviour
             _attackSpeedTimer = 0;
             GameObject bulletClone = bullet;
             Instantiate(bulletClone, shootPosition.position, Quaternion.identity); // funkcja pojawiajaca rzeczy
+
+            Bullet bulletScript = bulletClone.GetComponent<Bullet>();
+            bulletScript.bulletDamage = damageMax;
         }
     }
     public void OnDeath() // void = pustka 
@@ -101,16 +108,29 @@ public class Player : MonoBehaviour
         isPlayerAlive = false;
         spriteRenderer.enabled = false;
     }
+    public void TakeDamage(int damage)
+    {
+        SpawnParticles(takeDamageExplosion, 2f);
+        hp -= damage;
+    }
     public void SpawnParticles(GameObject particles, float time)
     {
-        Instantiate(particles, transform.position, Quaternion.identity);
-        Destroy(particles, time);
+        GameObject cloneObject = particles;
+        cloneObject = Instantiate(particles, transform.position, Quaternion.identity);
+        Destroy(cloneObject, time);
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if(collision.gameObject.tag == "EnemyBullet")
         {
-            hp--; // hp = hp - 1// hp-=1
+            TakeDamage(1);
+        }
+        else if (collision.gameObject.tag == "Asteroid")
+        {
+            Asteroid asteroidScript;
+            asteroidScript = collision.gameObject.GetComponent<Asteroid>();
+            TakeDamage(asteroidScript.damage);
+            asteroidScript.Die();
         }
     }
 }
